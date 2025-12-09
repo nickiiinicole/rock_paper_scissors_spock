@@ -34,7 +34,7 @@ Siguiendo el epígrafe _"2.3.2 Properties of task environments"_ de Russell & No
 * **Observable Parcialmente :**  no vemos la mano del oponente hasta que saca
 * **Multi Agente:** hay dos jugadores compitiendo
 * **Estocástico:** , ya que el ganar de una probabilidad de resultado 
-* **Episódico:** solo importa maximizar la recompensa inmediata, no afecta a futuro
+* **Secuencial:** El agente consulta el historial (memoria) de las jugadas anteriores para decidir, por lo que los episodios están conectados.
 * **Estático:** no cambia el entorno
 * **Discreto:** es una iteracción fija, solo sacas piedra, papel, tijera 
 * **Conocido:** conoce las reglas del juego
@@ -44,50 +44,63 @@ Siguiendo el epígrafe _"2.3.2 Properties of task environments"_ de Russell & No
 
 ## 2. Identificación del tipo de agente y estructura
 
-Para resolver este problema, se ha seleccionado un **[INDICAR TIPO DE AGENTE: Ej. Agente Reactivo Basado en Modelos]**.
+Se ha seleccionado un **Agente Reactivo Basado en Modelos**.
 
 ### Modelo del Agente
 
-A continuación se muestra el diagrama del modelo elegido, adaptado específicamente al contexto del juego RPS:
-
-![Modelo Agente](./doc/modelo_AI.png)
-*(Recuerda sustituir esta imagen por tu propio diagrama donde se vean los componentes específicos de tu agente).*
+![Diagrama del Agente - RPS](./img/image_agent.png)
 
 ### Componentes y Justificación
 
-El agente se estructura con los siguientes componentes mostrados en la figura:
+El agente necesita mantener un registro del pasado para predecir el futuro. Sus componentes son:
 
-1.  **Sensores:** [Descripción de qué percibe el agente...]
-2.  **Estado Interno:** [Descripción de qué memoria guarda el agente...]
-3.  **Reglas de condición-acción:** [Descripción de la lógica de decisión...]
-4.  **Actuadores:** [Descripción de cómo ejecuta la acción el agente...]
+1.  **Sensores:** Reciben la jugada del oponente del turno anterior (input del usuario).
+2.  **Estado Interno (Memoria):** Una estructura de datos (lista o diccionario) que almacena el historial de todas las jugadas del oponente hasta el momento. Sin esto, el agente sería ciego a los patrones de comportamiento.
+3.  **Reglas de condición-acción (Estrategia):** Basado en el historial, el oponente saca 'Piedra' el 60% de las veces".
+    * *Regla de Decisión:* "Si lo más probable es 'Piedra', mi acción es 'Papel'".
+4.  **Actuadores:** La función que devuelve la jugada elegida (`return "Paper"`) y la muestra en la consola.
 
----
+
 
 ## 3. Implementación en Python
 
 La implementación se ha realizado en Python siguiendo los principios **SOLID**, haciendo especial énfasis en:
 * **SRP (Single Responsibility Principle):** Modularización del código para que cada función tenga una única responsabilidad.
-* **OCP (Open/Closed Principle):** Diseño preparado para añadir nuevas armas (como Lagarto y Spock) sin modificar el código fuente original.
+* **OCP (Open/Closed Principle):** Diseño preparado para añadir nuevas armas (como Lagarto y Spock) sin modificar el código fuente original. 
 
 ### Estrategia del Agente
 
-La lógica principal de decisión reside en la función `get_computer_action()`. La estrategia implementada para maximizar el **rendimiento** consiste en:
+La lógica principal reside en `get_computer_action()`. Para maximizar el rendimiento, se ha implementado una estrategia de **Análisis de Frecuencia Histórica**:
 
-> [Describe aquí tu estrategia creativa. Ej: "El agente utiliza una cadena de Markov para predecir el siguiente movimiento del usuario basándose en su historial reciente..."]
-
-### Diagrama de flujo del programa
-
-![Table Driven Agent Program](./doc/table_driven_agent_program.png)
+> El agente utiliza un diccionario para contar cuántas veces ha sacado el usuario Piedra, Papel o Tijeras. Calcula cuál es la jugada más frecuente del rival (Moda) y selecciona automáticamente la acción que vence a esa tendencia. Si no hay datos suficientes, actúa aleatoriamente.
 
 ### Ejemplo de Código
 
-El núcleo de la decisión se encuentra en el siguiente bloque:
+El núcleo de la decisión implementa esta lógica de conteo y contraataque:
 
 ```python
-def get_computer_action(user_action):
-    # Ejemplo de lógica simplificada
-    if user_action == "Rock":
-        return "Paper"
-    # ... lógica real ...
-    return action
+def get_computer_action(user_history):
+    """
+    Determina la acción basándose en el historial del oponente.
+    Estrategia: Counter-Move sobre la jugada más frecuente (Moda).
+    """
+    import random
+    
+    game_rules = {
+        "Rock": "Paper",
+        "Paper": "Scissors",
+        "Scissors": "Rock"
+    }
+    
+    # 1. Si no hay datos, jugar aleatorio
+    if not user_history:
+        return random.choice(list(game_rules.keys()))
+    
+    # 2. Calcular la jugada más frecuente del usuario (Modelo)
+    most_frequent_move = max(set(user_history), key=user_history.count)
+    
+    # 3. Elegir la acción que gana a esa jugada (Regla de decisión)
+    prediction = game_rules[most_frequent_move]
+    
+    return prediction
+
