@@ -11,8 +11,8 @@ Se propone programar un agente inteligente como solución al entorno de tareas d
 1. [Especificación del entorno de tareas](#1-especificación-del-entorno-de-tareas)
 2. [Identificación del tipo de agente y estructura](#2-identificación-del-tipo-de-agente-y-estructura)
 3. [Implementación en Python](#3-implementación-en-python)
-4. [Extensión a RPS + Lagarto Spock](#4-extensión-a-rps--lagarto-spock)
-5. [Bibliografía](#bibliografía)
+4. [Extensión a RPS + Lagarto Spock (PENDIENTE)](#4-extensión-a-rps--lagarto-spock)
+
 
 ---
 
