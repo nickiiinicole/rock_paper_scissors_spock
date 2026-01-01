@@ -61,46 +61,44 @@ El agente necesita mantener un registro del pasado para predecir el futuro. Sus 
 4.  **Actuadores:** La función que devuelve la jugada elegida (`return "Paper"`) y la muestra en la consola.
 
 
-
 ## 3. Implementación en Python
 
-La implementación se ha realizado en Python siguiendo los principios **SOLID**, haciendo especial énfasis en:
-* **SRP (Single Responsibility Principle):** Modularización del código para que cada función tenga una única responsabilidad.
-* **OCP (Open/Closed Principle):** Diseño preparado para añadir nuevas armas (como Lagarto y Spock) sin modificar el código fuente original. 
+La implementación se ha realizado siguiendo los principios **SOLID**: 
+* **SRP (Single Responsibility Principle):** Se ha modularizado el código separando responsabilidades:
+    * `Victories` (Diccionario): Define las reglas de datos y relaciones de victoria.
+    * `IntelligentAgent`: Clase encargada únicamente de gestionar la memoria y decidir el siguiente movimiento.
+    * `assess_game`: Función encargada únicamente de gestionar la visualización del resultado (UI), delegando la lógica de decisión.
+* **OCP (Open/Closed Principle):** El diseño está "cerrado a modificación" pero "abierto a extensión". Al sustituir las cadenas de `if/elif` por un diccionario de reglas (`Victories`), fue posible añadir nuevas armas sin modificar la lógica interna de las funciones de evaluación.
 
-### Estrategia del Agente
+### Estrategia del Agente (IntelligentAgent)
 
-La lógica principal reside en `get_computer_action()`. Para maximizar el rendimiento, se ha implementado una estrategia de **Análisis de Frecuencia Histórica**:
+La lógica de decisión se invoca desde `get_computer_action()`, pero reside en la clase `IntelligentAgent`. Se ha implementado un **Agente Reactivo Basado en Modelos** con una estrategia de **Análisis de Frecuencia Histórica:D**:
 
-> El agente utiliza un diccionario para contar cuántas veces ha sacado el usuario Piedra, Papel o Tijeras. Calcula cuál es la jugada más frecuente del rival (Moda) y selecciona automáticamente la acción que vence a esa tendencia. Si no hay datos suficientes, actúa aleatoriamente.
+> El agente mantiene una memoria interna (`self.history`) de todas las jugadas del usuario. En cada turno, utiliza la herramienta `Counter` para calcular la **moda** (la jugada que más repite el rival) y consulta el diccionario de reglas para seleccionar automáticamente la acción específica que la derrota
 
 ### Ejemplo de Código
 
-El núcleo de la decisión implementa esta lógica de conteo y contraataque:
+`IntelligentAgent` implementa la lógica de predicción y contraataque:
 
 ```python
-def get_computer_action(user_history):
-    """
-    Determina la acción basándose en el historial del oponente.
-    Estrategia: Counter-Move sobre la jugada más frecuente (Moda).
-    """
-    import random
-    
-    game_rules = {
-        "Rock": "Paper",
-        "Paper": "Scissors",
-        "Scissors": "Rock"
-    }
-    
-    # 1. Si no hay datos, jugar aleatorio
-    if not user_history:
-        return random.choice(list(game_rules.keys()))
-    
-    # 2. Calcular la jugada más frecuente del usuario (Modelo)
-    most_frequent_move = max(set(user_history), key=user_history.count)
-    
-    # 3. Elegir la acción que gana a esa jugada (Regla de decisión)
-    prediction = game_rules[most_frequent_move]
-    
-    return prediction
+class IntelligentAgent:
+    def __init__(self):
+        self.history = []
 
+    def get_move(self):
+        # 1. Si no hay datos (primera ronda), jugar aleatorio
+        if not self.history:
+             selection = random.randint(0, len(GameAction) - 1)
+             return GameAction(selection)
+        
+        # 2. INTELIGENCIA: Calcular la jugada más frecuente del usuario (Moda)
+        # most_common(1) devuelve [(Acción, Cantidad)], usamos [0][0] para sacar la acción.
+        most_common = Counter(self.history).most_common(1)[0][0]
+        
+        # 3. CONTRAATAQUE: Buscar en las reglas qué gana a esa jugada frecuente
+        for action, losers in Victories.items():
+            if most_common in losers:
+                return action
+        
+        # Fallback de seguridad
+        return GameAction(random.randint(0, len(GameAction) - 1))
